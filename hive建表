@@ -1,0 +1,84 @@
+# 外部表，分区ubi_dw_poi_prob
+CREATE external TABLE if not exists ubi_dw_poi_prob (
+  ID String,
+  start String,
+  type_100 DOUBLE,
+  type_101 DOUBLE,
+  type_200 DOUBLE,
+  type_300 DOUBLE,
+  type_500 DOUBLE,
+  type_600 DOUBLE,
+  type_601 DOUBLE,
+  type_604 DOUBLE,
+  type_800 DOUBLE,
+  type_803 DOUBLE,
+  type_806 DOUBLE,
+  type_900 DOUBLE,
+  type_901 DOUBLE,
+  type_902 DOUBLE,
+  type_1000 DOUBLE,
+  type_1100 DOUBLE,
+  type_1101 DOUBLE,
+  type_1200 DOUBLE,
+  type_1203 DOUBLE,
+  type_1300 DOUBLE,
+  type_1301 DOUBLE,
+  type_1302 DOUBLE,
+  type_1303 DOUBLE,
+  type_1304 DOUBLE,
+  type_1305 DOUBLE,
+  type_1400 DOUBLE,
+  type_1403 DOUBLE,
+  type_1404 DOUBLE,
+  type_1500 DOUBLE,
+  type_1501 DOUBLE,
+  type_1600 DOUBLE,
+  type_1601 DOUBLE,
+  type_1800 DOUBLE,
+  type_1900 DOUBLE,
+  type_2200 DOUBLE,
+  type_9900 DOUBLE
+)
+partitioned BY (stat_date STRING)
+ROW format delimited FIELDS TERMINATED BY ','
+LOCATION 'hdfs://hadoop-namenode1:8020/user/kettle/ubi/dw/poi/poi_prob';
+
+--外部表，分区，temp_poi_scores，同时把HDFS上数据间的空格去掉。（由SparkR输出的数据类型不能是INT型，否则会出错，而STRING型的数据间会有空格）
+DROP TABLE IF EXISTS temp_poi_scores;
+CREATE external TABLE temp_poi_scores(
+  imei STRING,
+  tid STRING,
+  vid STRING,
+  dim_month STRING,	  
+  poi_dim_id STRING,
+  percent STRING
+)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+LOCATION 'hdfs://hadoop-namenode1:8020/user/kettle/ubi/dm/ubi_dm_poi_scores/stat_date=0701';
+alter table temp_poi_scores add partition(stat_date='20160701');
+--删除空格
+insert overwrite table temp_poi_scores select
+trim(imei) as imei,
+trim(tid) as tid,
+trim(vid) as vid,
+trim(dim_month) as dim_month,
+trim(poi_dim_id) as poi_dim_id,
+trim(percent) as percent
+from temp_poi_scores;
+--删除分区
+--ALTER TABLE ubi_dm_poi_scores DROP PARTITION(stat_date='20160701');
+--分区表ubi_dm_poi_scores，（percent的数据类型为DECIMAL，不用double，解决显示科学记数法的问题）
+CREATE external TABLE ubi_dm_poi_scores(
+  imei STRING,
+  tid INT,
+  vid INT,
+  dim_month STRING,	  
+  poi_dim_id STRING,
+  percent DECIMAL(5, 4)
+)
+partitioned BY (stat_date STRING)
+ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+LOCATION 'hdfs://hadoop-namenode1:8020/user/kettle/ubi/dm/ubi_dm_poi_scores';
+--把表temp_poi_scores中的数据插入ubi_dm_poi_scores中的一个分区，然后删除临时表temp_poi_scores
+INSERT OVERWRITE TABLE ubi_dm_poi_scores PARTITION(stat_date='20160701') SELECT imei,tid,vid,dim_month,poi_dim_id,percent FROM temp_poi_scores;
+DROP TABLE IF EXIST temp_poi_scores;
