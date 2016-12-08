@@ -179,3 +179,4 @@ sql(hiveContext, paste0("CREATE external TABLE temp_poi_scores(imei STRING,tid S
 sql(hiveContext, "insert overwrite table temp_poi_scores select trim(imei) as imei,trim(tid) as tid,trim(vid) as vid,trim(dim_month) as dim_month,trim(poi_dim_id) as poi_dim_id,trim(percent) as percentfrom temp_poi_scores;")
 sql(hiveContext, paste0("ALTER TABLE ubi_dm_poi_scores ADD IF NOT EXISTS PARTITION(stat_date=", year_month, "01) LOCATION ", paste0("'/user/kettle/ubi/dm/ubi_dm_poi_scores/stat_date=", year_month, "01'")))
 sparkR.stop()
+
