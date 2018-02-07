@@ -82,7 +82,7 @@ radius <- 500
 extensions <- "all"
 batch <- 'false'
 homeorcorp <- 0                                                                              #爬虫参数
-map_ak <- '196506b424d4b7983d6c6a0a358165e8' 
+map_ak <- '' 
 k.r <- 6371393     # 地球半径
 url_head = paste0("http://restapi.amap.com/v3/geocode/regeo?key=", map_ak, "&location=")
 url_tail = paste0("&poitype=&radius=",radius,"&extensions=",extensions,"&batch=", batch,"&homeorcorp=",homeorcorp, "&output=",output, "&roadlevel=1")
